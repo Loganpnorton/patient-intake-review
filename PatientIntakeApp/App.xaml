@@ -1,0 +1,80 @@
+<Application x:Class="PatientIntakeApp.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:PatientIntakeApp.Converters"
+             Startup="OnStartup">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="LightBlue" SecondaryColor="Teal" />
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Custom Color Overrides to match Sky Blue #0EA5E9 -->
+            <Color x:Key="PrimaryHueMidColor">#0EA5E9</Color>
+            <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="{StaticResource PrimaryHueMidColor}"/>
+            <SolidColorBrush x:Key="PrimaryHueMidForegroundBrush" Color="White"/>
+            <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="#E0F2FE"/>
+            <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="#0284C7"/>
+
+            <!-- Global Styles -->
+            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource MaterialDesignTextBlock}"/>
+            
+            <!-- Converters -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
+            <converters:StringToUriConverter x:Key="StringToUri"/>
+            <converters:EnumEqualsToVisibilityConverter x:Key="EnumToVis"/>
+            <converters:AnyTrueToVisibilityConverter x:Key="AnyTrueToVis"/>
+            <converters:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVis"/>
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+            <converters:UtcToLocalDateTimeStringConverter x:Key="UtcToLocalDateTimeString"/>
+
+            <!-- Disable MaterialDesign ripple/hover feedback circles across the app -->
+            <Style x:Key="NoRippleIconButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                <Setter Property="materialDesign:RippleAssist.IsDisabled" Value="True"/>
+            </Style>
+            <!-- Flat icon button with NO hover background circle (only subtle opacity change) -->
+            <Style x:Key="FlatIconButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="6"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Opacity" Value="0.85"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Opacity" Value="0.75"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="NoRippleRaisedButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                <Setter Property="materialDesign:RippleAssist.IsDisabled" Value="True"/>
+            </Style>
+            <Style x:Key="NoRippleOutlinedButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                <Setter Property="materialDesign:RippleAssist.IsDisabled" Value="True"/>
+            </Style>
+            <Style x:Key="NoRippleChoiceChipPrimaryOutlineRadioButton" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignChoiceChipPrimaryOutlineRadioButton}">
+                <Setter Property="materialDesign:RippleAssist.IsDisabled" Value="True"/>
+            </Style>
+            <Style x:Key="NoRippleSwitchToggleButton" TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignSwitchToggleButton}">
+                <Setter Property="materialDesign:RippleAssist.IsDisabled" Value="True"/>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

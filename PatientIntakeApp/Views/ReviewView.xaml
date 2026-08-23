@@ -1,0 +1,455 @@
+<UserControl x:Class="PatientIntakeApp.Views.ReviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:PatientIntakeApp.Converters"
+             xmlns:models="clr-namespace:PatientIntakeApp.Models"
+             mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1200">
+    <UserControl.Resources>
+        <converters:SeverityDisplayConverter x:Key="SeverityDisplayConverter"/>
+        <converters:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
+        <converters:ReviewChipTextConverter x:Key="ReviewChipTextConverter"/>
+        <converters:ReviewChipBrushConverter x:Key="ReviewChipBrushConverter"/>
+        <converters:FindingTypeChipTextConverter x:Key="FindingTypeChipTextConverter"/>
+        <converters:FindingStatusChipConverter x:Key="FindingStatusChipConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:SeverityChipConverter x:Key="SeverityChipConverter"/>
+
+        <!-- Queue tab styling (make it obvious only one is active) -->
+        <Style x:Key="QueueTabRadioButtonStyle"
+               TargetType="RadioButton"
+               BasedOn="{StaticResource NoRippleChoiceChipPrimaryOutlineRadioButton}">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="MinWidth" Value="120"/>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="16,0,16,16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel: Findings -->
+        <Grid Grid.Column="0" Margin="0,0,16,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                <TextBlock Text="Findings Review" Style="{StaticResource MaterialDesignHeadline5TextBlock}" />
+                <TextBlock Text="Review flagged items before proceeding." Style="{StaticResource MaterialDesignCaptionTextBlock}" Foreground="{DynamicResource MaterialDesignBody}"/>
+                
+                <!-- Level 1: Queue tabs -->
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <RadioButton Style="{StaticResource QueueTabRadioButtonStyle}"
+                                 Content="{Binding NeedsReviewTabLabel}"
+                                 IsChecked="True"
+                                 GroupName="QueueTab"
+                                 Command="{Binding SetQueueTabCommand}"
+                                 CommandParameter="Needs Review"
+                                 Margin="0,0,8,0"/>
+                    <RadioButton Style="{StaticResource QueueTabRadioButtonStyle}"
+                                 Content="{Binding ReviewedTabLabel}"
+                                 GroupName="QueueTab"
+                                 Command="{Binding SetQueueTabCommand}"
+                                 CommandParameter="Reviewed"
+                                 Margin="0,0,8,0"/>
+                </StackPanel>
+
+                <!-- Level 2: Filter pills -->
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="0,8,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource NoRippleChoiceChipPrimaryOutlineRadioButton}"
+                                     Content="All"
+                                     GroupName="CategoryFilter"
+                                     IsChecked="True"
+                                     Padding="14,7"
+                                     Command="{Binding FilterCommand}"
+                                     CommandParameter="All"
+                                     Margin="0,0,8,0"/>
+                        <RadioButton Style="{StaticResource NoRippleChoiceChipPrimaryOutlineRadioButton}"
+                                     Content="Local Flag"
+                                     GroupName="CategoryFilter"
+                                     Padding="14,7"
+                                     Command="{Binding FilterCommand}"
+                                     CommandParameter="Local Flag"
+                                     Margin="0,0,8,0"/>
+                        <RadioButton Style="{StaticResource NoRippleChoiceChipPrimaryOutlineRadioButton}"
+                                     Content="AI"
+                                     GroupName="CategoryFilter"
+                                     Padding="14,7"
+                                     Command="{Binding FilterCommand}"
+                                     CommandParameter="AI"
+                                     Margin="0,0,8,0"/>
+                        <!-- Add more filters dynamically if needed -->
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Pause/Resume + SME notes -->
+                <materialDesign:Card Padding="12" UniformCornerRadius="8" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="SME / Pause Controls" FontWeight="Bold" Margin="0,0,0,6"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding PauseReason, UpdateSourceTrigger=PropertyChanged}"
+                                     materialDesign:HintAssist.Hint="Pause reason (e.g., SME consult needed)"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     MinHeight="40"
+                                     Padding="10,6"
+                                     VerticalContentAlignment="Center"/>
+
+                            <Button Grid.Column="2"
+                                    Content="PAUSE"
+                                    Command="{Binding PauseReviewCommand}"
+                                    Style="{StaticResource NoRippleOutlinedButton}"
+                                    Height="40"
+                                    Visibility="{Binding IsReviewPaused, Converter={StaticResource InverseBoolToVis}}"/>
+
+                            <Button Grid.Column="4"
+                                    Content="RESUME"
+                                    Command="{Binding ResumeReviewCommand}"
+                                    Style="{StaticResource NoRippleRaisedButton}"
+                                    Height="40"
+                                    Visibility="{Binding IsReviewPaused, Converter={StaticResource BoolToVis}}"/>
+                        </Grid>
+
+                        <TextBox Text="{Binding SmeNotes, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="SME consultation notes"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 MinHeight="70"
+                                 Padding="10,8"
+                                 Margin="0,10,0,0"/>
+                    </StackPanel>
+                </materialDesign:Card>
+            </StackPanel>
+
+            <ListBox Grid.Row="1" 
+                     ItemsSource="{Binding FilteredFindings}" 
+                     SelectedItem="{Binding SelectedFinding}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.CanContentScroll="False"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Padding="0">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource MaterialDesignListBoxItem}">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0,0,0,8"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <!-- Keep card padding at 0 so the selection border sits on the outer edge -->
+                                    <materialDesign:Card UniformCornerRadius="8" Margin="0" Padding="0">
+                                        <Border x:Name="border"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                BorderBrush="Transparent"
+                                                Padding="6"
+                                                CornerRadius="8">
+                                            <ContentPresenter/>
+                                        </Border>
+                                    </materialDesign:Card>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}"/>
+                                            <Setter TargetName="border" Property="BorderThickness" Value="2"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <EventSetter Event="PreviewMouseDoubleClick" Handler="ListBoxItem_MouseDoubleClick"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Chips row (full width so it never truncates due to action buttons) -->
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
+                                <!-- Severity tier chip (always first) -->
+                                <Border CornerRadius="9" Padding="10,3" MinHeight="20" Margin="0,0,6,0">
+                                    <Border.Background>
+                                        <Binding Path="Severity" Converter="{StaticResource SeverityChipConverter}" ConverterParameter="Background"/>
+                                    </Border.Background>
+                                    <TextBlock FontSize="8.5"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center"
+                                               LineStackingStrategy="BlockLineHeight"
+                                               LineHeight="12">
+                                        <TextBlock.Foreground>
+                                            <Binding Path="Severity" Converter="{StaticResource SeverityChipConverter}" ConverterParameter="Foreground"/>
+                                        </TextBlock.Foreground>
+                                        <TextBlock.Text>
+                                            <Binding Path="Severity" Converter="{StaticResource SeverityChipConverter}" ConverterParameter="Text"/>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Border>
+
+                                <!-- Local badge -->
+                                <Border CornerRadius="9" Padding="10,3" MinHeight="20" Margin="0,0,6,0"
+                                        Visibility="{Binding HasLocal, Converter={StaticResource BoolToVis}}"
+                                        Background="#FFC107">
+                                    <TextBlock FontSize="8.5"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center"
+                                               Foreground="#1F1F1F"
+                                               LineStackingStrategy="BlockLineHeight"
+                                               LineHeight="12"
+                                               Text="LOCAL"/>
+                                </Border>
+
+                                <!-- AI badge -->
+                                <Border CornerRadius="9" Padding="10,3" MinHeight="20" Margin="0,0,6,0"
+                                        Visibility="{Binding HasAI, Converter={StaticResource BoolToVis}}"
+                                        Background="#6D28D9">
+                                    <TextBlock FontSize="8.5"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center"
+                                               Foreground="White"
+                                               LineStackingStrategy="BlockLineHeight"
+                                               LineHeight="12"
+                                               Text="AI"/>
+                                </Border>
+
+                                <!-- Status chip (reviewed-only; removes redundant "Needs Review" badge) -->
+                                <Border CornerRadius="9"
+                                        Padding="6,2"
+                                        Visibility="{Binding IsReviewed, Converter={StaticResource BoolToVis}}">
+                                    <Border.Background>
+                                        <MultiBinding Converter="{StaticResource FindingStatusChipConverter}" ConverterParameter="Background">
+                                            <Binding Path="IsReviewed"/>
+                                            <Binding Path="ReviewStatus"/>
+                                        </MultiBinding>
+                                    </Border.Background>
+                                    <Border.BorderBrush>
+                                        <MultiBinding Converter="{StaticResource FindingStatusChipConverter}" ConverterParameter="BorderBrush">
+                                            <Binding Path="IsReviewed"/>
+                                            <Binding Path="ReviewStatus"/>
+                                        </MultiBinding>
+                                    </Border.BorderBrush>
+                                    <Border.BorderThickness>2</Border.BorderThickness>
+                                    <TextBlock FontSize="8.5"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center"
+                                               LineStackingStrategy="BlockLineHeight"
+                                               LineHeight="12">
+                                        <TextBlock.Foreground>
+                                            <MultiBinding Converter="{StaticResource FindingStatusChipConverter}" ConverterParameter="Foreground">
+                                                <Binding Path="IsReviewed"/>
+                                                <Binding Path="ReviewStatus"/>
+                                            </MultiBinding>
+                                        </TextBlock.Foreground>
+                                        <TextBlock.Text>
+                                            <MultiBinding Converter="{StaticResource FindingStatusChipConverter}" ConverterParameter="Text">
+                                                <Binding Path="IsReviewed"/>
+                                                <Binding Path="ReviewStatus"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Main term / evidence + context-rule subtitle -->
+                            <StackPanel Grid.Row="1" Margin="0,0,0,6">
+                                <TextBlock Text="{Binding DisplayTitle}"
+                                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                           FontWeight="Black"
+                                           Margin="0,0,0,2"
+                                           TextWrapping="Wrap"/>
+
+                                <TextBlock Text="{Binding DisplaySubtitle}"
+                                           FontStyle="Italic"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                           TextWrapping="Wrap"
+                                           Visibility="{Binding DisplaySubtitle, Converter={StaticResource StringNullOrEmptyToVis}}"/>
+                            </StackPanel>
+
+                            <!-- Bottom row: page left + actions right -->
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Page row with jump icon -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="FileDocumentOutline"
+                                                             Width="16" Height="16"
+                                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                             VerticalAlignment="Center"
+                                                             Margin="0,0,6,0"/>
+                                    <TextBlock Text="{Binding Page, StringFormat='Page {0}'}"
+                                               Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource MaterialDesignBody}"/>
+                                    <Button Style="{StaticResource FlatIconButton}"
+                                            Command="{Binding DataContext.JumpToFindingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Open in viewer"
+                                            Margin="2,0,0,0">
+                                        <materialDesign:PackIcon Kind="OpenInNew" Width="14" Height="14"
+                                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                    </Button>
+                                </StackPanel>
+
+                                <!-- Actions -->
+                                <StackPanel Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsReviewed, Converter={StaticResource InverseBoolToVis}}">
+                                <Button Style="{StaticResource NoRippleRaisedButton}"
+                                            Command="{Binding DataContext.ConfirmFindingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding DataContext.IsReviewPaused, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBooleanConverter}}"
+                                            Height="30"
+                                            Margin="0,0,6,0"
+                                            Background="#388E3C"
+                                            Foreground="White"
+                                            Padding="10,0"
+                                            VerticalContentAlignment="Center"
+                                            HorizontalContentAlignment="Center">
+                                    <Grid VerticalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0"
+                                                                 Kind="Check"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="Clear"
+                                                   FontSize="11"
+                                                   FontWeight="Bold"
+                                                   VerticalAlignment="Center"
+                                                   LineStackingStrategy="BlockLineHeight"
+                                                   LineHeight="14"/>
+                                    </Grid>
+                                    </Button>
+
+                                <Button Style="{StaticResource NoRippleOutlinedButton}"
+                                            Command="{Binding DataContext.DismissFindingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding DataContext.IsReviewPaused, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBooleanConverter}}"
+                                            Height="30"
+                                            BorderBrush="#FFC107"
+                                            Foreground="#FFC107"
+                                            Padding="10,0"
+                                            VerticalContentAlignment="Center"
+                                            HorizontalContentAlignment="Center">
+                                    <Grid VerticalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <materialDesign:PackIcon Grid.Column="0"
+                                                                 Kind="FlagOutline"
+                                                                 Width="16" Height="16"
+                                                                 Margin="0,0,6,0"
+                                                                 VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="Flag"
+                                                   FontSize="11"
+                                                   FontWeight="Bold"
+                                                   VerticalAlignment="Center"
+                                                   LineStackingStrategy="BlockLineHeight"
+                                                   LineHeight="14"/>
+                                    </Grid>
+                                    </Button>
+                                </StackPanel>
+
+                                <!-- Reviewed actions (Undo back to Needs Review) -->
+                                <StackPanel Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding IsReviewed, Converter={StaticResource BoolToVis}}">
+                                    <Button Style="{StaticResource NoRippleOutlinedButton}"
+                                            Command="{Binding DataContext.UndoFindingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding DataContext.IsReviewPaused, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBooleanConverter}}"
+                                            Height="30"
+                                            BorderBrush="{DynamicResource PrimaryHueMidBrush}"
+                                            Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                            Padding="10,0"
+                                            ToolTip="Undo (send back to Needs Review)"
+                                            VerticalContentAlignment="Center"
+                                            HorizontalContentAlignment="Center">
+                                        <materialDesign:PackIcon Kind="Undo" Width="18" Height="18" VerticalAlignment="Center"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Complete vs Return when paused -->
+            <Button Grid.Row="2"
+                    Content="COMPLETE REVIEW"
+                    Command="{Binding FinishReviewCommand}"
+                    Visibility="{Binding IsReviewPaused, Converter={StaticResource InverseBoolToVis}}"
+                    Style="{StaticResource NoRippleRaisedButton}"
+                    Height="45"
+                    Margin="4,16,4,0"/>
+
+            <Button Grid.Row="2"
+                    Content="RETURN"
+                    Command="{Binding ReturnToDashboardCommand}"
+                    Visibility="{Binding IsReviewPaused, Converter={StaticResource BoolToVis}}"
+                    Style="{StaticResource NoRippleOutlinedButton}"
+                    Height="45"
+                    Margin="4,16,4,0"/>
+        </Grid>
+
+        <!-- Right Panel: PDF Viewer -->
+        <materialDesign:Card Grid.Column="1" UniformCornerRadius="8" VerticalAlignment="Stretch">
+            <wv2:WebView2 Source="{Binding PdfSource, Converter={StaticResource StringToUri}, FallbackValue='about:blank'}">
+                <wv2:WebView2.Visibility>
+                    <!-- Workaround: WebView2 is an HWND and will appear above WPF overlays (dialogs/settings).
+                         Hide it while a modal is open so the user can interact with the in-app dialog. -->
+                    <MultiBinding Converter="{StaticResource AnyTrueToVis}">
+                        <Binding Path="DataContext.IsDialogVisible" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                        <Binding Path="DataContext.IsSettingsVisible" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                    </MultiBinding>
+                </wv2:WebView2.Visibility>
+            </wv2:WebView2>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

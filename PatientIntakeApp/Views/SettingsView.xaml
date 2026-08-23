@@ -1,0 +1,635 @@
+<UserControl x:Class="PatientIntakeApp.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="1000">
+
+    <materialDesign:Card Padding="0"
+                         UniformCornerRadius="12"
+                         HorizontalAlignment="Stretch"
+                         VerticalAlignment="Stretch"
+                         MinWidth="900"
+                         MinHeight="600">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Header -->
+            <Border Grid.Row="0" Grid.ColumnSpan="2" Padding="16" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Settings"
+                               Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                               VerticalAlignment="Center"/>
+
+                            <Button Grid.Column="1"
+                                    Style="{StaticResource FlatIconButton}"
+                            Command="{Binding DataContext.CloseSettingsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            ToolTip="Close"
+                            HorizontalAlignment="Right">
+                        <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Left nav -->
+            <Border Grid.Row="1" Grid.Column="0" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="0,0,1,0" Padding="8">
+                <ListBox SelectedValuePath="Tag"
+                         SelectedValue="{Binding SelectedSection}"
+                         Background="Transparent"
+                         BorderThickness="0">
+                    <ListBoxItem Content="Appearance" Tag="Appearance" />
+                    <ListBoxItem Content="Facilities" Tag="Facilities"
+                                 Visibility="{Binding CanManageFacilities, Converter={StaticResource BoolToVis}}"/>
+                    <ListBoxItem Content="Developer Options" Tag="DeveloperOptions"
+                                 Visibility="{Binding CanSeeDeveloperOptions, Converter={StaticResource BoolToVis}}"/>
+                </ListBox>
+            </Border>
+
+            <!-- Right content -->
+            <Grid Grid.Row="1" Grid.Column="1" Margin="20">
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedSection}" Value="Appearance">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <StackPanel>
+                        <TextBlock Text="Appearance" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,12"/>
+                        <materialDesign:Card Padding="16" UniformCornerRadius="8">
+                            <DockPanel LastChildFill="False">
+                                <StackPanel DockPanel.Dock="Left">
+                                    <TextBlock Text="Dark mode" FontWeight="Bold"/>
+                                    <TextBlock Text="Toggle application theme" Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                </StackPanel>
+                                <ToggleButton DockPanel.Dock="Right"
+                                              IsChecked="{Binding IsDarkMode}"
+                                              Style="{StaticResource NoRippleSwitchToggleButton}"
+                                              VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Facilities (admin/developer) -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedSection}" Value="Facilities">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+                            <TextBlock Text="Facilities" Style="{StaticResource MaterialDesignHeadline6TextBlock}" DockPanel.Dock="Left"/>
+                        </DockPanel>
+
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="320"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Facility list -->
+                            <materialDesign:Card Grid.Column="0" Padding="12,12,20,12" UniformCornerRadius="8">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding FacilitySearchText, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="Search Facilities"
+                                                 materialDesign:HintAssist.IsFloating="False"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 MinHeight="44"
+                                                 Padding="12,8"
+                                                 VerticalContentAlignment="Center"/>
+
+                                        <!-- Use a clipped border so nothing can render outside and get cut off -->
+                                        <Border Grid.Column="2"
+                                                Width="44"
+                                                Height="44"
+                                                CornerRadius="6"
+                                                BorderThickness="1"
+                                                BorderBrush="{DynamicResource PrimaryHueMidBrush}"
+                                                Background="Transparent"
+                                                ClipToBounds="True"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center">
+                                            <Button Style="{StaticResource FlatIconButton}"
+                                                    Command="{Binding AddFacilityCommand}"
+                                                    ToolTip="Add facility"
+                                                    IsEnabled="{Binding CanManageFacilities}"
+                                                    Width="44"
+                                                    Height="44"
+                                                    Padding="0">
+                                                <materialDesign:PackIcon Kind="Plus" Width="18" Height="18"
+                                                                         Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                            </Button>
+                                        </Border>
+                                    </Grid>
+
+                                    <ListBox Grid.Row="1"
+                                             ItemsSource="{Binding FacilitiesView}"
+                                             SelectedItem="{Binding SelectedFacility}"
+                                             HorizontalContentAlignment="Stretch"
+                                             BorderThickness="0">
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource MaterialDesignListBoxItem}">
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="Margin" Value="0,0,0,8"/>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid Grid.Column="0">
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                                        <TextBlock Grid.Row="1"
+                                                                   Text="{Binding Id, StringFormat='ID: {0}'}"
+                                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                                   FontSize="12"
+                                                                   Margin="0,2,0,0"/>
+                                                    </Grid>
+
+                                                    <!-- No box around trash icon, but keep a 44x44 hit target aligned with + -->
+                                                    <Button Grid.Column="1"
+                                                            Style="{StaticResource FlatIconButton}"
+                                                            Command="{Binding DataContext.RemoveFacilityCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Remove facility"
+                                                            IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            Width="44"
+                                                            Height="44"
+                                                            Padding="0"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="TrashCanOutline"
+                                                                                 Width="18" Height="18"
+                                                                                 Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Grid>
+                            </materialDesign:Card>
+
+                            <!-- Facility detail / rules editor -->
+                            <materialDesign:Card Grid.Column="2" Padding="16" UniformCornerRadius="8">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <!-- Header / actions -->
+                                        <RowDefinition Height="Auto"/>
+                                        <!-- Facility name/id -->
+                                        <RowDefinition Height="Auto"/>
+                                        <!-- Keyword label -->
+                                        <RowDefinition Height="Auto"/>
+                                        <!-- Unified add rule bar -->
+                                        <RowDefinition Height="Auto"/>
+                                        <!-- Keyword list -->
+                                        <RowDefinition Height="*"/>
+                                        <!-- Context label -->
+                                        <RowDefinition Height="Auto"/>
+                                        <!-- Context list -->
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding SelectedFacility.Name, FallbackValue='Facility Details'}"
+                                                   Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                                   FontWeight="Bold"
+                                                   VerticalAlignment="Center"/>
+
+                                        <Button Grid.Column="1"
+                                                Style="{StaticResource FlatIconButton}"
+                                                Command="{Binding ImportRulesCommand}"
+                                                ToolTip="Import rules (JSON/CSV)"
+                                                Margin="0,0,4,0"
+                                                IsEnabled="{Binding CanManageFacilities}">
+                                            <materialDesign:PackIcon Kind="FileImportOutline" Width="18" Height="18"/>
+                                        </Button>
+
+                                        <Button Grid.Column="2"
+                                                Style="{StaticResource FlatIconButton}"
+                                                Command="{Binding SaveFacilitiesCommand}"
+                                                ToolTip="Save facility"
+                                                IsEnabled="{Binding CanManageFacilities}">
+                                            <materialDesign:PackIcon Kind="ContentSaveOutline" Width="18" Height="18"/>
+                                        </Button>
+
+                                        <Button Grid.Column="3"
+                                                Style="{StaticResource FlatIconButton}"
+                                                Command="{Binding ShowImportHelpCommand}"
+                                                ToolTip="Import format help"
+                                                Margin="4,0,0,0">
+                                            <materialDesign:PackIcon Kind="HelpCircleOutline" Width="18" Height="18"
+                                                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <Grid Grid.Row="1" Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding FacilityName, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="Facility name"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 MinHeight="44"
+                                                 Padding="12,8"
+                                                 VerticalContentAlignment="Center"
+                                                 IsEnabled="{Binding CanManageFacilities}"/>
+
+                                        <TextBox Grid.Column="2"
+                                                 Text="{Binding FacilityId, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="Facility ID"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 MinHeight="44"
+                                                 Padding="12,8"
+                                                 VerticalContentAlignment="Center"
+                                                 IsEnabled="{Binding CanManageFacilities}"/>
+                                    </Grid>
+
+                                    <!-- Single unified rule input (always visible for existing facilities) -->
+                                    <Grid Grid.Row="3" Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="170"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <ComboBox Grid.Column="0"
+                                                  ItemsSource="{Binding RuleKindOptions}"
+                                                  SelectedItem="{Binding SelectedRuleKind}"
+                                                  materialDesign:HintAssist.Hint="Type"
+                                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                  MinHeight="44"
+                                                  Padding="12,8"
+                                                  VerticalContentAlignment="Center"
+                                                  IsEnabled="{Binding CanManageFacilities}"/>
+
+                                        <TextBox Grid.Column="2"
+                                                 Text="{Binding NewRuleText, UpdateSourceTrigger=PropertyChanged}"
+                                                 materialDesign:HintAssist.Hint="Add a rule"
+                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                 MinHeight="44"
+                                                 Padding="12,8"
+                                                 VerticalContentAlignment="Center"
+                                                 IsEnabled="{Binding CanManageFacilities}"/>
+
+                                        <Button Grid.Column="4"
+                                                Content="Add"
+                                                Command="{Binding AddRuleCommand}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Height="44"
+                                                IsEnabled="{Binding CanManageFacilities}"/>
+                                    </Grid>
+
+                                    <TextBlock Grid.Row="2"
+                                               Text="Keyword Rules"
+                                               Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                               FontWeight="Bold"
+                                               Margin="0,0,0,8"/>
+
+                                    <ListBox Grid.Row="4" ItemsSource="{Binding Rules}" BorderThickness="0">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ToggleButton Grid.Column="0"
+                                                                  IsChecked="{Binding IsEnabled}"
+                                                                  Style="{StaticResource NoRippleSwitchToggleButton}"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="0,0,10,0"
+                                                                  IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+                                                    <ComboBox Grid.Column="1"
+                                                              ItemsSource="{Binding DataContext.SeverityOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                              SelectedItem="{Binding Severity}"
+                                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                              Height="44"
+                                                              Padding="10,4"
+                                                              Margin="0,0,10,0"
+                                                              VerticalContentAlignment="Center"
+                                                              IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+                                                    <TextBox Grid.Column="2"
+                                                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                             MinHeight="44"
+                                                             Padding="12,8"
+                                                             VerticalContentAlignment="Center"
+                                                             Margin="0,0,8,0"
+                                                             IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                    <Button Grid.Column="3"
+                                                            Style="{StaticResource FlatIconButton}"
+                                                            Command="{Binding DataContext.RemoveRuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Remove rule"
+                                                            IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                                        <materialDesign:PackIcon Kind="Delete" Width="18" Height="18"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <TextBlock Grid.Row="5"
+                                               Text="Context Rules"
+                                               Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                               FontWeight="Bold"
+                                               Margin="0,16,0,8"/>
+
+                                    <ListBox Grid.Row="6" ItemsSource="{Binding ContextRules}" BorderThickness="0">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ToggleButton Grid.Column="0"
+                                                                  IsChecked="{Binding IsEnabled}"
+                                                                  Style="{StaticResource NoRippleSwitchToggleButton}"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="0,0,10,0"
+                                                                  IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+                                                    <ComboBox Grid.Column="1"
+                                                              ItemsSource="{Binding DataContext.SeverityOptions, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                              SelectedItem="{Binding Severity}"
+                                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                                              Height="44"
+                                                              Padding="10,4"
+                                                              Margin="0,0,10,0"
+                                                              VerticalContentAlignment="Center"
+                                                              IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+                                                    <TextBox Grid.Column="2"
+                                                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                             MinHeight="44"
+                                                             Padding="12,8"
+                                                             VerticalContentAlignment="Center"
+                                                             Margin="0,0,8,0"
+                                                             IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                    <Button Grid.Column="3"
+                                                            Style="{StaticResource FlatIconButton}"
+                                                            Command="{Binding DataContext.RemoveContextRuleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            ToolTip="Remove context rule"
+                                                            IsEnabled="{Binding DataContext.CanManageFacilities, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                                        <materialDesign:PackIcon Kind="Delete" Width="18" Height="18"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <!-- (moved to Grid.Row=2 so it stays visible) -->
+                                </Grid>
+                            </materialDesign:Card>
+                        </Grid>
+                    </Grid>
+                </Grid>
+
+                <!-- Developer Options (developer only) -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedSection}" Value="DeveloperOptions">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Padding="0">
+                        <StackPanel>
+                            <TextBlock Text="Developer Options" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,12"/>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,0,0,12">
+                                <DockPanel LastChildFill="False">
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="Disable local keyword search" FontWeight="Bold"/>
+                                        <TextBlock Text="Forces analysis to rely on AI (slower) for pages without local flags."
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                    </StackPanel>
+                                    <ToggleButton DockPanel.Dock="Right"
+                                                  IsChecked="{Binding DevSettings.DisableLocalKeywordSearch}"
+                                                  Style="{StaticResource NoRippleSwitchToggleButton}"
+                                                  VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8">
+                                <DockPanel LastChildFill="False">
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="Always forward to AI" FontWeight="Bold"/>
+                                        <TextBlock Text="Runs AI even if local keywords were found (useful for false positives)."
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                    </StackPanel>
+                                    <ToggleButton DockPanel.Dock="Right"
+                                                  IsChecked="{Binding DevSettings.AlwaysForwardToAI}"
+                                                  Style="{StaticResource NoRippleSwitchToggleButton}"
+                                                  VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,12,0,0">
+                                <DockPanel LastChildFill="False">
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="Enable AI batching (1 page at a time)" FontWeight="Bold"/>
+                                        <TextBlock Text="Sends pages to AI one-by-one so you can stop early to conserve cost."
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                    </StackPanel>
+                                    <ToggleButton DockPanel.Dock="Right"
+                                                  IsChecked="{Binding DevSettings.EnableAiBatching}"
+                                                  Style="{StaticResource NoRippleSwitchToggleButton}"
+                                                  VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,12,0,0">
+                                <DockPanel LastChildFill="False">
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="AI batching page limit" FontWeight="Bold"/>
+                                        <TextBlock Text="Only prompts to continue/review when the PDF is over this page limit."
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                    </StackPanel>
+                                    <ComboBox DockPanel.Dock="Right"
+                                              Width="110"
+                                              ItemsSource="{Binding AiBatchPageLimitOptions}"
+                                              SelectedItem="{Binding DevSettings.AiBatchPageLimit}"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                              VerticalContentAlignment="Center"
+                                              IsEnabled="{Binding DevSettings.EnableAiBatching}"/>
+                                </DockPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,12,0,0">
+                                <DockPanel LastChildFill="False">
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="Stop AI on first warning" FontWeight="Bold"/>
+                                        <TextBlock Text="When batching is enabled, stops sending further pages after AI returns a warning."
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                    </StackPanel>
+                                    <ToggleButton DockPanel.Dock="Right"
+                                                  IsChecked="{Binding DevSettings.StopAiOnFirstWarning}"
+                                                  IsEnabled="{Binding DevSettings.EnableAiBatching}"
+                                                  Style="{StaticResource NoRippleSwitchToggleButton}"
+                                                  VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,12,0,0">
+                                <DockPanel LastChildFill="False">
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="Show Recently Reviewed section" FontWeight="Bold"/>
+                                        <TextBlock Text="Displays the 'Recently Reviewed' footer on the staging screen."
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                    </StackPanel>
+                                    <ToggleButton DockPanel.Dock="Right"
+                                                  IsChecked="{Binding DevSettings.ShowRecentlyReviewed}"
+                                                  Style="{StaticResource NoRippleSwitchToggleButton}"
+                                                  VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Gemini API Key" FontWeight="Bold"/>
+                                    <TextBlock Text="Stored in user_settings.json (developer only). Environment variable GEMINI_API_KEY overrides this at runtime."
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12" Margin="0,2,0,10"/>
+                                    <TextBox Text="{Binding GeminiApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             materialDesign:HintAssist.Hint="Paste API key"
+                                             MinHeight="44"
+                                             Padding="12,8"
+                                             VerticalContentAlignment="Center"/>
+                                </StackPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Model Used" FontWeight="Bold"/>
+                                    <TextBlock Text="Determines the model used for analysis."
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12" Margin="0,2,0,10"/>
+                                    <ComboBox ItemsSource="{Binding GeminiModelOptions}"
+                                              SelectedItem="{Binding SelectedGeminiModel}"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                              materialDesign:HintAssist.Hint="Choose model"
+                                              MinHeight="44"
+                                              Padding="12,8"
+                                              VerticalContentAlignment="Center"/>
+                                </StackPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Database Connection String" FontWeight="Bold"/>
+                                    <TextBlock Text="Leave blank for local SQLite. Set to a SQL Server connection string for shared mode. Env var PATIENTINTAKE_DB_CONNECTION_STRING overrides this at runtime."
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12" Margin="0,2,0,10"/>
+                                    <TextBox Text="{Binding DbConnectionString, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             materialDesign:HintAssist.Hint="(blank = local SQLite) or Server=...;Database=...;"
+                                             MinHeight="44"
+                                             Padding="12,8"
+                                             VerticalContentAlignment="Center"/>
+                                </StackPanel>
+                            </materialDesign:Card>
+
+                            <materialDesign:Card Padding="16" UniformCornerRadius="8" Margin="0,12,0,0">
+                                <DockPanel LastChildFill="False">
+                                    <StackPanel DockPanel.Dock="Left">
+                                        <TextBlock Text="Disable auto log-out" FontWeight="Bold"/>
+                                        <TextBlock Text="Prevents the app from logging out after inactivity."
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" FontSize="12"/>
+                                    </StackPanel>
+                                    <ToggleButton DockPanel.Dock="Right"
+                                                  IsChecked="{Binding DevSettings.DisableAutoLogout}"
+                                                  Style="{StaticResource NoRippleSwitchToggleButton}"
+                                                  VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </materialDesign:Card>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Grid>
+    </materialDesign:Card>
+</UserControl>
+
+

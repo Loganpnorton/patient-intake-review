@@ -1,0 +1,34 @@
+# Visual Studio and .NET
+.vs/
+bin/
+obj/
+artifacts/
+TestResults/
+*.user
+*.suo
+
+# Runtime data and local configuration
+user_settings.json
+dev_settings.json
+config.json
+*.db
+*.sqlite
+*.mdf
+*.ldf
+*.log
+debug_log.txt
+startup_error.txt
+
+# Documents and exports are never repository content
+Seeded Patient Data/
+Patient_Intake_Screenshots/
+*.pdf
+
+# Secrets and environment overrides
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db

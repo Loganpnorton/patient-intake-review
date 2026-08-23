@@ -1,0 +1,12 @@
+[
+  {
+    "Id": "FACILITY_ALPHA",
+    "Name": "Portfolio Demo Facility",
+    "Rules": [
+      "Requires manual review",
+      "Incomplete documentation",
+      "Follow-up requested"
+    ],
+    "ContextRules": []
+  }
+]
