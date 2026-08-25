@@ -4,6 +4,8 @@ A privacy-safe portfolio edition of a Windows desktop workflow for ingesting ref
 
 ![Synthetic Patient Intake workflow](docs/patient-intake-walkthrough.png)
 
+[Watch the 75-second synthetic demo](docs/demo.mp4)
+
 The image above is a clearly labeled synthetic walkthrough derived from the WPF workflow. It contains no patient data and is not a screenshot of a clinical or production system.
 
 This repository intentionally contains **no patient documents, screenshots, databases, logs, credentials, production endpoints, or original Git history**. It demonstrates application architecture and workflow code only. Do not use it with real health information without a formal security, privacy, and compliance review.
