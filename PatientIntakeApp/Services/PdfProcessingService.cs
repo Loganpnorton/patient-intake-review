@@ -118,16 +118,10 @@ public class PdfProcessingService : IPdfProcessingService
         }
         finally
         {
-            // TEMPORARY DEBUG: Keep the flattened temp file for visual inspection.
-            // Commented out deletion so you can open Flattened_{guid}.pdf manually.
-            // if (workFilePath != filePath && File.Exists(workFilePath))
-            // {
-            //     try { File.Delete(workFilePath); }
-            //     catch (Exception ex) { Log($"Failed to delete temp flattened file: {ex.Message}"); }
-            // }
             if (workFilePath != filePath && File.Exists(workFilePath))
             {
-                Log($"DEBUG: Flattened PDF preserved for inspection at: {workFilePath}");
+                try { File.Delete(workFilePath); }
+                catch (Exception ex) { Log($"Failed to delete temporary flattened PDF: {ex.Message}"); }
             }
         }
 

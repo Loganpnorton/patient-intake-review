@@ -2,6 +2,12 @@
 
 A privacy-safe portfolio edition of a Windows desktop workflow for ingesting referral documents, extracting structured findings, routing reviews, and producing final intake reports.
 
+![Synthetic Patient Intake workflow](docs/patient-intake-walkthrough.png)
+
+[Watch the 75-second synthetic demo](docs/demo.mp4)
+
+The image above is a clearly labeled synthetic walkthrough derived from the WPF workflow. It contains no patient data and is not a screenshot of a clinical or production system.
+
 This repository intentionally contains **no patient documents, screenshots, databases, logs, credentials, production endpoints, or original Git history**. It demonstrates application architecture and workflow code only. Do not use it with real health information without a formal security, privacy, and compliance review.
 
 ## Engineering highlights
@@ -70,9 +76,10 @@ To customize generic facility rules, copy `PatientIntakeApp/config.example.json`
 ```powershell
 dotnet restore PatientIntakeApp/PatientIntakeApp.csproj
 dotnet build PatientIntakeApp/PatientIntakeApp.csproj -c Release --no-restore
+dotnet test PatientIntakeApp.Tests/PatientIntakeApp.Tests.csproj -c Release
 ```
 
-GitHub Actions runs the same restore and Release build on Windows.
+GitHub Actions builds on Windows and runs synthetic tests for document/facility validation, sensitive identifier redaction, isolated configuration, SQLite persistence, and generated PDF extraction/subsetting.
 
 ## Repository map
 
@@ -84,10 +91,14 @@ GitHub Actions runs the same restore and Release build on Windows.
 | `PatientIntakeApp/Services/Stores` | Persistence abstractions for operational entities |
 | `PatientIntakeApp/Data` | EF Core context, entities, and migrations |
 | `PatientIntakeApp/Converters` | WPF display and visibility converters |
+| `PatientIntakeApp.Tests` | Synthetic validation, redaction, configuration, persistence, and PDF tests |
+| `docs` | Reviewer-safe walkthrough and 75-second demo script |
 
 ## Portfolio status
 
 This is a sanitized engineering demonstration, not a production medical system. Production use would require threat modeling, access-control review, encryption and key management, audit retention, data-processing agreements, secure deployment controls, and applicable regulatory validation.
+
+For a short portfolio review, follow [`docs/demo-script.md`](docs/demo-script.md) or open the self-contained [`docs/synthetic-walkthrough.html`](docs/synthetic-walkthrough.html).
 
 ## License
 
